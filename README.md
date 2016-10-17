@@ -59,7 +59,7 @@ HOW TO USE:
       vec4 fragCol //the fragment color (after lighting, includes the value set by GL11.color4f, ect.)
       vec3 fragNorm //the fragment normal
       vec4 eyePos //the fragment position, relative to the projection
-      
+	  
   TO MAKE A POST-PROCESSOR:
     1. create a file in your mod's assets, containing a list of the post-processor's uniforms and constants, like this:
       uniform float currentTime; //uniform
