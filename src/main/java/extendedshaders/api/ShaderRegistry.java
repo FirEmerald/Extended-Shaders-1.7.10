@@ -36,11 +36,13 @@ public class ShaderRegistry
 	public static void addFragmentShader(ShaderData data)
 	{
 		fragmentShaders.add(data);
+		hasChanged = true;
 	}
 	/** turns a fragment shader OFF **/
 	public static void removeFragmentShader(ShaderData data)
 	{
 		fragmentShaders.remove(data);
+		hasChanged = true;
 	}
 	/** gets the active fragment shaders, sorted by priority **/
 	public static ShaderData[] getFragmentShaders()
