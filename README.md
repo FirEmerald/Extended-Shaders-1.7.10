@@ -1,5 +1,3 @@
-
-ROVIE# Extended-Shaders-1.7.10
 API for the Extended Shaders mod, for Minecraft 1.7.10
 
 The purpose of this API, and it's containing coremod, Extended Shaders, is to allow mods to use shaders and post-processors inside Minecraft without needing to learn how to make a coremod, and without sacrificing compatibility with other mods using this shader system.
@@ -9,7 +7,6 @@ It is NOT intended to be used by someone without a good understanding of GLSL.
 HOW TO USE:
   you will need to add these API classes to your project, PRESERVING the package names.
   HOW TO MAKE A SHADER:
-  
     TO MAKE A VERTEX SHADER:
       1. create a file in your mod's assets, containing a list of the uniforms, variables, and constants, like this:
         uniform float burnAmount; //uniform
@@ -23,7 +20,6 @@ HOW TO USE:
         ShaderRegistry.addVertexShader(vertShader);
       5. to turn it OFF, do this:
         ShaderRegistry.removeVertexShader(vertShader);
-        
     TO MAKE A FRAGMENT SHADER:
       1. create a file in your mod's assets, containing a list of the uniforms, variables, and constants, like this:
         uniform float burnAmount; //uniform
@@ -42,7 +38,6 @@ HOW TO USE:
         ShaderRegistry.addFragmentShader(fragShader);
       5. to turn it OFF, do this:
         ShaderRegistry.removeFragmentShader(fragShader);
-        
     PROVIDED UNIFORMS:
       sampler2D tex //the current texture
       sampler2D light //the lightmap
@@ -53,13 +48,11 @@ HOW TO USE:
       bool useNormals //whether normal-based lighting is enabled (entities, tileentities, items in hand, ect.)
       bool useLighting //whether lightmap-based lighting is enabled (block lighting)
       int renderPass //the current render pass
-      
     PROVIDED VARIABLES:
       vec4 texCoords //the texture coordinates
       vec4 fragCol //the fragment color (after lighting, includes the value set by GL11.color4f, ect.)
       vec3 fragNorm //the fragment normal
       vec4 eyePos //the fragment position, relative to the projection
-	  
   TO MAKE A POST-PROCESSOR:
     1. create a file in your mod's assets, containing a list of the post-processor's uniforms and constants, like this:
       uniform float currentTime; //uniform
@@ -82,12 +75,10 @@ HOW TO USE:
       PostProcessorRegistry.addPostProcessor(postProcessor);
     5. to turn it OFF use this:
       PostProcessorRegistry.removePostProcessor(postProcessor);
-      
     PROVIDED UNIFORMS:
       sampler2D frame //the current render scene
       float dx //x-distance between pixels
       float dy //y-distance between pixels
-      
     PROVIDED VARIABLES:
       vec2 texCoords //current pixel location
 
