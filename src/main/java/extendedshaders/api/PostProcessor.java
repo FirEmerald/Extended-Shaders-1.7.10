@@ -2,7 +2,9 @@ package extendedshaders.api;
 
 import java.util.HashMap;
 
-import extendedshaders.core.Plugin;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
@@ -10,6 +12,7 @@ import net.minecraft.util.ResourceLocation;
 /** Use this class to create a post-render effect, such as blur. **/
 public class PostProcessor implements Comparable
 {
+    private static Logger logger = LogManager.getLogger("ExtendedShaders|API");
 	/** the shader program of this post-processor **/
 	public int program = -1;
 	/** the location of the code for this post-processor **/
@@ -85,7 +88,7 @@ public class PostProcessor implements Comparable
 		}
 		catch (Exception e)
 		{
-			Plugin.logger.error("Failed to load shader data " + shaderFile.toString(), e);
+			logger.error("Failed to load shader data " + shaderFile.toString(), e);
 		}
 		if (uniformFile != null) try
 		{
@@ -93,7 +96,7 @@ public class PostProcessor implements Comparable
 		}
 		catch (Exception e)
 		{
-			Plugin.logger.error("Failed to load uniform/function data " + uniformFile.toString(), e);
+			logger.error("Failed to load uniform/function data " + uniformFile.toString(), e);
 		}
 		if (shaderText.equals("") && uniformText.equals("")) program = 0;
 		else Passthrough.instance.loadPostProcessor(this);

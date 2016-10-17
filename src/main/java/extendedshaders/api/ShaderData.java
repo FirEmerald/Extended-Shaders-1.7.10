@@ -3,7 +3,9 @@ package extendedshaders.api;
 import java.util.HashMap;
 import java.util.Map;
 
-import extendedshaders.core.Plugin;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
@@ -13,6 +15,7 @@ import net.minecraft.util.ResourceLocation;
  *  it can have a priority - higher-priority shaders are called FIRST. **/
 public class ShaderData implements Comparable
 {
+    private static Logger logger = LogManager.getLogger("ExtendedShaders|API");
 	/** the code for this shader **/
 	public String shaderText;
 	/** the uniforms/variables/constants for this shader **/
@@ -89,7 +92,7 @@ public class ShaderData implements Comparable
 		}
 		catch (Exception e)
 		{
-			Plugin.logger.error("Failed to load shader data " + shaderFile.toString(), e);
+			logger.error("Failed to load shader data " + shaderFile.toString(), e);
 		}
 		if (uniformFile != null) try
 		{
@@ -97,7 +100,7 @@ public class ShaderData implements Comparable
 		}
 		catch (Exception e)
 		{
-			Plugin.logger.error("Failed to load uniform/function data " + uniformFile.toString(), e);
+			logger.error("Failed to load uniform/function data " + uniformFile.toString(), e);
 		}
 	}
 	
