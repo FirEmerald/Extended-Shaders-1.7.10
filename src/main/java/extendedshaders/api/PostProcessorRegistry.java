@@ -6,22 +6,22 @@ import java.util.Arrays;
 /** used to turn post-processing effects on and off, by adding and removing them from a registry **/
 public class PostProcessorRegistry
 {
-	private static final ArrayList<PostProcessor> shaders = new ArrayList<PostProcessor>();
+	private static final ArrayList<PostProcessor> postProcessors = new ArrayList<PostProcessor>();
 	/** turns the post-processor ON **/
-	public static void addShader(PostProcessor data)
+	public static void addPostProcessor(PostProcessor data)
 	{
-		shaders.add(data);
+		postProcessors.add(data);
 	}
 	/** turns the post-processor OFF **/
-	public static void removeShader(PostProcessor data)
+	public static void removePostProcessor(PostProcessor data)
 	{
-		shaders.remove(data);
+		postProcessors.remove(data);
 	}
 	/** gets the active post-processors, sorted by priority **/
-	public static PostProcessor[] getShaders()
+	public static PostProcessor[] getPostProcessors()
 	{
-		PostProcessor[] data = new PostProcessor[shaders.size()];
-		data = shaders.toArray(data);
+		PostProcessor[] data = new PostProcessor[postProcessors.size()];
+		data = postProcessors.toArray(data);
 		Arrays.sort(data);
 		return data;
 	}
