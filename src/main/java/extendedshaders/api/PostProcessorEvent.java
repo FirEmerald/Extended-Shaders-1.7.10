@@ -2,7 +2,6 @@ package extendedshaders.api;
 
 import cpw.mods.fml.common.eventhandler.Cancelable;
 import cpw.mods.fml.common.eventhandler.Event;
-import cpw.mods.fml.common.eventhandler.Event.HasResult;
 
 public class PostProcessorEvent extends Event
 {
