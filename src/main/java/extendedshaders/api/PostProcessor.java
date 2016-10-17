@@ -27,6 +27,9 @@ public class PostProcessor implements Comparable
 	public final int priority;
 	/** locations of set uniforms used to find offset pixels **/
 	public int dx = -1, dy = -1;
+	/** location of the uniform for setting the current "eye".<br>
+	 * the uniform's value (not THIS value) will be -1 for no anaglyph, 0 red, and 1 for cyan. **/
+	public int eye = -1;
 	/** all the custom uniform locations in this post-processor **/
 	public final HashMap<String, Integer> uniforms = new HashMap<String, Integer>();
 

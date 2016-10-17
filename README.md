@@ -78,6 +78,7 @@ HOW TO USE:
 			sampler2D frame //the current render scene
 			float dx //x-distance between pixels
 			float dy //y-distance between pixels
+			int eye //The current "eye" - -1 for no anaglyph, 0 for red, 1 for cyan
 		PROVIDED VARIABLES:
 			vec2 texCoords //current pixel location
 			
