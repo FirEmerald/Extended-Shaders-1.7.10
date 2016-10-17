@@ -4,7 +4,6 @@ It is designed to allow multiple mods to "attach" shader uniforms, variables, co
 It is NOT intended to be used by someone without a good understanding of GLSL.
 
 apologies for the MESS here, Github is being an absolute PAIN and not displaying my newlines outside of the editor.
-
 HOW TO USE:
 	you will need to add these API classes to your project, PRESERVING the package names.
 	HOW TO MAKE A SHADER:
