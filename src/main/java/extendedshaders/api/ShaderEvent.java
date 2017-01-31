@@ -6,6 +6,12 @@ import cpw.mods.fml.common.eventhandler.Event;
 public abstract class ShaderEvent extends Event
 {
 	public final float partialTicks;
+	/** ONLY USED BY FORGE!!! **/
+	public ShaderEvent()
+	{
+		partialTicks = 0;
+	}
+	
 	private ShaderEvent(float partialTicks)
 	{
 		this.partialTicks = partialTicks;
@@ -24,6 +30,12 @@ public abstract class ShaderEvent extends Event
 	@Cancelable
 	public static class RenderSky extends ShaderEvent
 	{
+		/** ONLY USED BY FORGE!!! **/
+		public RenderSky()
+		{
+			super();
+		}
+		
 		public RenderSky(float partialTicks)
 		{
 			super(partialTicks);
@@ -41,6 +53,13 @@ public abstract class ShaderEvent extends Event
 	public static abstract class RenderPass extends ShaderEvent
 	{
 		public final int renderPass;
+		/** ONLY USED BY FORGE!!! **/
+		public RenderPass()
+		{
+			super();
+			renderPass = 0;
+		}
+		
 		public RenderPass(float partialTicks, int renderPass)
 		{
 			super(partialTicks);
@@ -58,6 +77,12 @@ public abstract class ShaderEvent extends Event
 	 **/
 	public static class Start extends RenderPass
 	{
+		/** ONLY USED BY FORGE!!! **/
+		public Start()
+		{
+			super();
+		}
+		
 		public Start(float partialTicks)
 		{
 			super(partialTicks, 1);
@@ -74,6 +99,12 @@ public abstract class ShaderEvent extends Event
 	 **/
 	public static class Loop extends RenderPass
 	{
+		/** ONLY USED BY FORGE!!! **/
+		public Loop()
+		{
+			super();
+		}
+		
 		public Loop(float partialTicks, int renderPass)
 		{
 			super(partialTicks, renderPass);
@@ -89,6 +120,12 @@ public abstract class ShaderEvent extends Event
 	 **/
 	public static class Stop extends ShaderEvent
 	{
+		/** ONLY USED BY FORGE!!! **/
+		public Stop()
+		{
+			super();
+		}
+		
 		public Stop(float partialTicks)
 		{
 			super(partialTicks);

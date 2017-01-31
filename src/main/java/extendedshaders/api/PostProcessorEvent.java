@@ -7,6 +7,14 @@ public class PostProcessorEvent extends Event
 {
 	public final float partialTicks;
 	public final PostProcessor processor;
+	
+	/** ONLY USED BY FORGE!!! **/
+	public PostProcessorEvent()
+	{
+		this.partialTicks = 0;
+		this.processor = null;
+	}
+	
 	private PostProcessorEvent(float partialTicks, PostProcessor processor)
 	{
 		this.partialTicks = partialTicks;
@@ -26,6 +34,12 @@ public class PostProcessorEvent extends Event
 	@Cancelable
 	public static class Start extends PostProcessorEvent
 	{
+		/** ONLY USED BY FORGE!!! **/
+		public Start()
+		{
+			super();
+		}
+		
 		public Start(float partialTicks, PostProcessor processor)
 		{
 			super(partialTicks, processor);
@@ -42,6 +56,12 @@ public class PostProcessorEvent extends Event
 	 **/
 	public static class Stop extends PostProcessorEvent
 	{
+		/** ONLY USED BY FORGE!!! **/
+		public Stop()
+		{
+			super();
+		}
+		
 		public Stop(float partialTicks, PostProcessor processor)
 		{
 			super(partialTicks, processor);
