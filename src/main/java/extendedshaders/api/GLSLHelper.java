@@ -103,7 +103,7 @@ public class GLSLHelper
 	/** returns TRUE if the program validated. **/
 	public static boolean didProgramValidate(int program)
 	{
-		return OpenGlHelper.func_153157_c(program, GL20.GL_VALIDATE_STATUS) == GL11.GL_TRUE;
+		return (ARBSHADERS ? ARBShaderObjects.glGetObjectParameteriARB(program, ARBShaderObjects.GL_OBJECT_VALIDATE_STATUS_ARB) : GL20.glGetProgrami(program, GL20.GL_VALIDATE_STATUS)) == GL11.GL_TRUE;
 	}
 	/** gets the program log. **/
     public static String getProgramLog(int program)
