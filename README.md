@@ -3,10 +3,11 @@ The purpose of this API, and it's containing coremod, Extended Shaders, is to al
 It is designed to allow multiple mods to "attach" shader uniforms, variables, constants, and code without conflicting with each other, in a way not provided by GLSL itself.
 It is NOT intended to be used by someone without a good understanding of GLSL.
 
-HOW TO USE:
-  you will need to add these API classes to your project, PRESERVING the package names.
-  HOW TO MAKE A SHADER:
-    TO MAKE A VERTEX SHADER:
+HOW TO USE:	
+
+	You will need to add these API classes to your project, PRESERVING the package names.
+	HOW TO MAKE A SHADER:
+		TO MAKE A VERTEX SHADER:
       1. create a file in your mod's assets, containing a list of the uniforms, variables, and constants, like this:
         uniform float burnAmount; //uniform
         varying vec4 fragCol; //variable
@@ -50,7 +51,7 @@ HOW TO USE:
       vec4 fragCol //the fragment color (after lighting, includes the value set by GL11.color4f, ect.)
       vec3 fragNorm //the fragment normal
       vec4 eyePos //the fragment position, relative to the projection
-  HOW TO MAKE A POST-PROCESSOR:
+	HOW TO MAKE A POST-PROCESSOR:
     1. create a file in your mod's assets, containing a list of the post-processor's uniforms and constants, like this:
       uniform float currentTime; //uniform
       #define rad 3.0 //constant
