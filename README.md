@@ -1,46 +1,48 @@
+Please excuse the ugliness in the github readme viewer, it breaks my readme and I don't know why.
+
 API for the Extended Shaders mod, for Minecraft 1.7.10
 The purpose of this API, and it's containing coremod, Extended Shaders, is to allow mods to use shaders and post-processors inside Minecraft without needing to learn how to make a coremod, and without sacrificing compatibility with other mods using this shader system.
 It is designed to allow multiple mods to "attach" shader uniforms, variables, constants, and code without conflicting with each other, in a way not provided by GLSL itself.
 It is NOT intended to be used by someone without a good understanding of GLSL.
 
-HOW TO USE: 
-    You will need to add these API classes to your project, PRESERVING the package names.
-    HOW TO MAKE A SHADER DATA FILE:
-        1. create a file in your mod's assets, containing a list of the uniforms, variables, and constants for the vertex shader.
-        2. create a file in your mod's assets, containing the code for the vertex shader.
-        3. create a file in your mod's assets, containing a list of the uniforms, variables, and constants for the fragment shader.
-        4. create a file in your mod's assets, containing the code for the fragment shader. you will work via modifying gl_FragData[0] (the fragments color) or gl_FragData[1] (the fragment's eye position, used for certain post-proccesing).
-        5. create the ShaderData instance:
-            shaderData = new ShaderData(new ResourceLocation(modid, vertuniforms), new ResourceLocation(modid, vertcode), new ResourceLocation(modid, fraguniforms), new ResourceLocation(modid, fragcode));
-            *do note that any of those resourcelocations can be null, representing no code.*
-    HOW TO MAKE A SINGLE-STATE SHADER
-        1. follow steps 1-4 in "HOW TO MAKE A SHADER DATA FILE".
-        2. create the instance:
-            shaderSingle = new ShaderSingle(new ResourceLocation(modid, vertuniforms), new ResourceLocation(modid, vertcode), new ResourceLocation(modid, fraguniforms), new ResourceLocation(modid, fragcode), priority);
-    HOW TO MAKE A MULTI-STATE SHADER
-        1. follow steps 1-5 in "HOW TO MAKE A SHADER DATA FILE" for each state.
-        2. create the instance:
-            shaderSingle = new ShaderMulti(priority, shaderData1, shaderData2...);
-    HOW TO HANDLE SHADERS:
-        to turn a shader ON, do this:
-            ShaderRegistry.addShader(shader);
-        to turn a shader OFF, do this:
-            ShaderRegistry.removeShader(shader);
-        to get a shader's state:
-            state = ShaderRegistry.getShaderState(shader);
-        to set a shader's state:
-            ShaderRegistry.setShaderState(shader, state);
-    HOW TO MAKE A POST-PROCESSOR:
-        1. create a file in your mod's assets, containing a list of the post-processor's uniforms and constants.
-        2. create a file in your mod's assets, conatining the post-processor's code.
-            It is IMPORTANT that you do not use blending - alpha MUST be 0 or 1. you can also discard fragments if you would like.
-        3. create a new PostProcessor instance, like this
-            postProcessor = new PostProcessor(new ResourceLocation(modid, uniformslocation), new ResourceLocation(modid, codelocation), priority);
-            *do note that the uniforms location can be null, representing no code.*
-        4. to turn it ON use this:
-            PostProcessorRegistry.addPostProcessor(postProcessor);
-        5. to turn it OFF use this:
-            PostProcessorRegistry.removePostProcessor(postProcessor);
+HOW TO USE:	
+	You will need to add these API classes to your project, PRESERVING the package names.
+	HOW TO MAKE A SHADER DATA FILE:
+		1. create a file in your mod's assets, containing a list of the uniforms, variables, and constants for the vertex shader.
+		2. create a file in your mod's assets, containing the code for the vertex shader.
+		3. create a file in your mod's assets, containing a list of the uniforms, variables, and constants for the fragment shader.
+		4. create a file in your mod's assets, containing the code for the fragment shader. you will work via modifying gl_FragData[0] (the fragments color) or gl_FragData[1] (the fragment's eye position, used for certain post-proccesing).
+		5. create the ShaderData instance:
+			shaderData = new ShaderData(new ResourceLocation(modid, vertuniforms), new ResourceLocation(modid, vertcode), new ResourceLocation(modid, fraguniforms), new ResourceLocation(modid, fragcode));
+			*do note that any of those resourcelocations can be null, representing no code.*
+	HOW TO MAKE A SINGLE-STATE SHADER
+		1. follow steps 1-4 in "HOW TO MAKE A SHADER DATA FILE".
+		2. create the instance:
+			shaderSingle = new ShaderSingle(new ResourceLocation(modid, vertuniforms), new ResourceLocation(modid, vertcode), new ResourceLocation(modid, fraguniforms), new ResourceLocation(modid, fragcode), priority);
+	HOW TO MAKE A MULTI-STATE SHADER
+		1. follow steps 1-5 in "HOW TO MAKE A SHADER DATA FILE" for each state.
+		2. create the instance:
+			shaderSingle = new ShaderMulti(priority, shaderData1, shaderData2...);
+	HOW TO HANDLE SHADERS:
+		to turn a shader ON, do this:
+			ShaderRegistry.addShader(shader);
+		to turn a shader OFF, do this:
+			ShaderRegistry.removeShader(shader);
+		to get a shader's state:
+			state = ShaderRegistry.getShaderState(shader);
+		to set a shader's state:
+			ShaderRegistry.setShaderState(shader, state);
+	HOW TO MAKE A POST-PROCESSOR:
+		1. create a file in your mod's assets, containing a list of the post-processor's uniforms and constants.
+		2. create a file in your mod's assets, conatining the post-processor's code.
+			It is IMPORTANT that you do not use blending - alpha MUST be 0 or 1. you can also discard fragments if you would like.
+		3. create a new PostProcessor instance, like this
+			postProcessor = new PostProcessor(new ResourceLocation(modid, uniformslocation), new ResourceLocation(modid, codelocation), priority);
+			*do note that the uniforms location can be null, representing no code.*
+		4. to turn it ON use this:
+			PostProcessorRegistry.addPostProcessor(postProcessor);
+		5. to turn it OFF use this:
+			PostProcessorRegistry.removePostProcessor(postProcessor);
 See the classes inside the API for more advanced usage.
 
 SHADER UNIFORMS:
