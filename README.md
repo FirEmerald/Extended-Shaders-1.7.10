@@ -4,85 +4,140 @@ It is designed to allow multiple mods to "attach" shader uniforms, variables, co
 It is NOT intended to be used by someone without a good understanding of GLSL.
 
 HOW TO USE:	
-
 	You will need to add these API classes to your project, PRESERVING the package names.
-	HOW TO MAKE A SHADER:
-		TO MAKE A VERTEX SHADER:
-      1. create a file in your mod's assets, containing a list of the uniforms, variables, and constants, like this:
-        uniform float burnAmount; //uniform
-        varying vec4 fragCol; //variable
-        #define col vec3(.976, .969, .816) //constant
-      2. create a file in your mod's assets, containing the code for the shader, like this:
-        fragCol = fragCol * col;
-      3. create a new ShaderData instance, like this:
-        vertShader = new ShaderData(new ResourceLocation(modid, uniformslocation), new ResourceLocation(modid, codelocation), uniform name 1, uniform name 2, ...);
-      4. to turn it ON, do this:
-        ShaderRegistry.addVertexShader(vertShader);
-      5. to turn it OFF, do this:
-        ShaderRegistry.removeVertexShader(vertShader);
-    TO MAKE A FRAGMENT SHADER:
-      1. create a file in your mod's assets, containing a list of the uniforms, variables, and constants, like this:
-        uniform float burnAmount; //uniform
-        varying vec2 textureCoords; //variable
-        #define col vec3(.976, .969, .816) //constant
-      2. create a file in your mod's assets, containing the code for the shader. you will work via modifying gl_fragData[0], or setting it if you prefer, like this:
-        float depth = sqrt(eyePos.x * eyePos.x + eyePos.y * eyePos.y + eyePos.z * eyePos.z);
-        if (depth > 64.0) discard;
-        depth = clamp(depth / 64.0, 0, 1);
-        float val = (max(max(gl_FragData[0].r, gl_FragData[0].g), gl_FragData[0].b) + min(min(gl_FragData[0].r, gl_FragData[0].g), gl_FragData[0].b)) * .25;
-        gl_FragData[0] = vec4(vec3(1.0) - col * (depth + val - depth * val), gl_FragData[0].a);
-      3. create a new ShaderData instance, like this:
-        fragShader = new ShaderData(new ResourceLocation(modid, uniformslocation), new ResourceLocation(modid, codelocation), uniform name 1, uniform name 2, ...);
-      4. to turn it ON, do this:
-        ShaderRegistry.addFragmentShader(fragShader);
-      5. to turn it OFF, do this:
-        ShaderRegistry.removeFragmentShader(fragShader);
-    PROVIDED UNIFORMS:
-      sampler2D tex //the current texture
-      sampler2D light //the lightmap
-      bool useTex //whether textures are enabled
-      bool useFog //whether fog is enabled
-      bool isAlias //whether the current texture is the block & item alias
-      bool isEntity //whether the currently rendering object is a living entity
-      bool useNormals //whether normal-based lighting is enabled (entities, tileentities, items in hand, ect.)
-      bool useLighting //whether lightmap-based lighting is enabled (block lighting)
-    PROVIDED VARIABLES:
-      vec4 texCoords //the texture coordinates
-      vec4 fragCol //the fragment color (after lighting, includes the value set by GL11.color4f, ect.)
-      vec3 fragNorm //the fragment normal
-      vec4 eyePos //the fragment position, relative to the projection
+	HOW TO MAKE A SHADER DATA FILE:
+		1. create a file in your mod's assets, containing a list of the uniforms, variables, and constants for the vertex shader.
+		2. create a file in your mod's assets, containing the code for the vertex shader.
+		3. create a file in your mod's assets, containing a list of the uniforms, variables, and constants for the fragment shader.
+		4. create a file in your mod's assets, containing the code for the fragment shader. you will work via modifying gl_FragData[0] (the fragments color) or gl_FragData[1] (the fragment's eye position, used for certain post-proccesing).
+		5. create the ShaderData instance:
+			shaderData = new ShaderData(new ResourceLocation(modid, vertuniforms), new ResourceLocation(modid, vertcode), new ResourceLocation(modid, fraguniforms), new ResourceLocation(modid, fragcode));
+			*do note that any of those resourcelocations can be null, representing no code.*
+	HOW TO MAKE A SINGLE-STATE SHADER
+		1. follow steps 1-4 in "HOW TO MAKE A SHADER DATA FILE".
+		2. create the instance:
+			shaderSingle = new ShaderSingle(new ResourceLocation(modid, vertuniforms), new ResourceLocation(modid, vertcode), new ResourceLocation(modid, fraguniforms), new ResourceLocation(modid, fragcode), priority);
+	HOW TO MAKE A MULTI-STATE SHADER
+		1. follow steps 1-5 in "HOW TO MAKE A SHADER DATA FILE" for each state.
+		2. create the instance:
+			shaderSingle = new ShaderMulti(priority, shaderData1, shaderData2...);
+	HOW TO HANDLE SHADERS:
+		to turn a shader ON, do this:
+			ShaderRegistry.addShader(shader);
+		to turn a shader OFF, do this:
+			ShaderRegistry.removeShader(shader);
+		to get a shader's state:
+			state = ShaderRegistry.getShaderState(shader);
+		to set a shader's state:
+			ShaderRegistry.setShaderState(shader, state);
 	HOW TO MAKE A POST-PROCESSOR:
-    1. create a file in your mod's assets, containing a list of the post-processor's uniforms and constants, like this:
-      uniform float currentTime; //uniform
-      #define rad 3.0 //constant
-    2. create a file in your mod's assets, conatining the post-processor's code, like this:
-      float tx1 = rad * dx;
-      float tx2 = tx1 * .5;
-      float ty = rad * .5 * sqrt(3.0) * dy;
-      vec3 cp1 = texture2D(tex0, texCoords).rgb;
-      vec3 cp1 = texture2D(tex0, texCoords + vec2(tx1, 0)).rgb;
-      vec3 cp3 = texture2D(tex0, texCoords + vec2(tx2, ty)).rgb;
-      vec3 cp4 = texture2D(tex0, texCoords + vec2(-tx2, ty)).rgb;
-      vec3 cp5 = texture2D(tex0, texCoords + vec2(-tx1, 0)).rgb;
-      vec3 cp6 = texture2D(tex0, texCoords + vec2(-tx2, -ty)).rgb;
-      vec3 cp7 = texture2D(tex0, texCoords + vec2(tx2, -ty)).rgb;
-      gl_FragData[0] = vec4((cp1 + cp2 + cp3 + cp4 + cp5 + cp6 + cp7) / 7, 1);
-    3. create a new PostProcessor instance, like this
-      postProcessor = new PostProcessor(new ResourceLocation(modid, uniformslocation), new ResourceLocation(modid, codelocation), uniform name 1, uniform name 2, ...);
-    4. to turn it ON use this:
-      PostProcessorRegistry.addPostProcessor(postProcessor);
-    5. to turn it OFF use this:
-      PostProcessorRegistry.removePostProcessor(postProcessor);
-    PROVIDED UNIFORMS:
-      sampler2D tex0 //the current render scene
-      sampler2D tex1 //extra data used by Metroid Cubed 3
-      sampler2D tex2 //extra data used by Metroid Cubed 3
-      sampler2D tex3 //extra data used by Metroid Cubed 3
-      sampler2D tex4 //extra data used by Metroid Cubed 3
-      float dx //x-distance between pixels
-      float dy //y-distance between pixels
-      int eye //The current "eye" - -1 for no anaglyph, 0 for red, 1 for cyan
-    PROVIDED VARIABLES:
-      vec2 texCoords //current pixel location
-      
-The API also allows for priorities on shaders and post-processors. Look through the API for more information on these advanced features.
+		1. create a file in your mod's assets, containing a list of the post-processor's uniforms and constants.
+		2. create a file in your mod's assets, conatining the post-processor's code.
+			It is IMPORTANT that you do not use blending - alpha MUST be 0 or 1. you can also discard fragments if you would like.
+		3. create a new PostProcessor instance, like this
+			postProcessor = new PostProcessor(new ResourceLocation(modid, uniformslocation), new ResourceLocation(modid, codelocation), priority);
+			*do note that the uniforms location can be null, representing no code.*
+		4. to turn it ON use this:
+			PostProcessorRegistry.addPostProcessor(postProcessor);
+		5. to turn it OFF use this:
+			PostProcessorRegistry.removePostProcessor(postProcessor);
+See the classes inside the API for more advanced usage.
+
+SHADER UNIFORMS:
+varying vec4 fragCol; //fragment color.
+varying vec3 fragNorm; //fragment normal.
+varying vec4 eyePos; //fragment's eye position.
+varying vec4 objectPos; //fragment's object position.
+uniform bool useFog; //is fog enabled?
+uniform int fogMode; //advanced usage.
+uniform bool isAlias; //is this the block texture alias?
+uniform bool isEntity; //is this an entity?
+uniform bool useNormals; //is normal-based lighting enabled?
+uniform sampler2D tex0; //texture unit 0
+uniform bool useTex0; //is texture unit 0 enabled?
+uniform bool texGen0_s; //advanced usage.
+uniform int texGenMode0_s; //advanced usage.
+uniform bool texGen0_t; //advanced usage.
+uniform int texGenMode0_t; //advanced usage.
+uniform bool texGen0_p; //advanced usage.
+uniform int texGenMode0_p; //advanced usage.
+uniform bool texGen0_q; //advanced usage.
+uniform int texGenMode0_q; //advanced usage.
+uniform sampler2D tex1; //texture unit 1
+uniform bool useTex1; //is texture unit 1 enabled?
+uniform bool texGen1_s; //advanced usage.
+uniform int texGenMode1_s; //advanced usage.
+uniform bool texGen1_t; //advanced usage.
+uniform int texGenMode1_t; //advanced usage.
+uniform bool texGen1_p; //advanced usage.
+uniform int texGenMode1_p; //advanced usage.
+uniform bool texGen1_q; //advanced usage.
+uniform int texGenMode1_q; //advanced usage.
+uniform sampler2D tex2; //texture unit 2
+uniform bool useTex2; //is texture unit 2 enabled?
+uniform bool texGen2_s; //advanced usage.
+uniform int texGenMode2_s; //advanced usage.
+uniform bool texGen2_t; //advanced usage.
+uniform int texGenMode2_t; //advanced usage.
+uniform bool texGen2_p; //advanced usage.
+uniform int texGenMode2_p; //advanced usage.
+uniform bool texGen2_q; //advanced usage.
+uniform int texGenMode2_q; //advanced usage.
+uniform sampler2D tex3; //texture unit 3
+uniform bool useTex3; //is texture unit 3 enabled?
+uniform bool texGen3_s; //advanced usage.
+uniform int texGenMode3_s; //advanced usage.
+uniform bool texGen3_t; //advanced usage.
+uniform int texGenMode3_t; //advanced usage.
+uniform bool texGen3_p; //advanced usage.
+uniform int texGenMode3_p; //advanced usage.
+uniform bool texGen3_q; //advanced usage.
+uniform int texGenMode3_q; //advanced usage.
+uniform sampler2D tex4; //texture unit 4
+uniform bool useTex4; //is texture unit 4 enabled?
+uniform bool texGen4_s; //advanced usage.
+uniform int texGenMode4_s; //advanced usage.
+uniform bool texGen4_t; //advanced usage.
+uniform int texGenMode4_t; //advanced usage.
+uniform bool texGen4_p; //advanced usage.
+uniform int texGenMode4_p; //advanced usage.
+uniform bool texGen4_q; //advanced usage.
+uniform int texGenMode4_q; //advanced usage.
+uniform sampler2D tex5; //texture unit 5
+uniform bool useTex5; //is texture unit 5 enabled?
+uniform bool texGen5_s; //advanced usage.
+uniform int texGenMode5_s; //advanced usage.
+uniform bool texGen5_t; //advanced usage.
+uniform int texGenMode5_t; //advanced usage.
+uniform bool texGen5_p; //advanced usage.
+uniform int texGenMode5_p; //advanced usage.
+uniform bool texGen5_q; //advanced usage.
+uniform int texGenMode5_q; //advanced usage.
+uniform sampler2D tex6; //texture unit 6
+uniform bool useTex6; //is texture unit 6 enabled?
+uniform bool texGen6_s; //advanced usage.
+uniform int texGenMode6_s; //advanced usage.
+uniform bool texGen6_t; //advanced usage.
+uniform int texGenMode6_t; //advanced usage.
+uniform bool texGen6_p; //advanced usage.
+uniform int texGenMode6_p; //advanced usage.
+uniform bool texGen6_q; //advanced usage.
+uniform int texGenMode6_q; //advanced usage.
+uniform sampler2D tex7; //texture unit 7
+uniform bool useTex7; //is texture unit 7 enabled?
+uniform bool texGen7_s; //advanced usage.
+uniform int texGenMode7_s; //advanced usage.
+uniform bool texGen7_t; //advanced usage.
+uniform int texGenMode7_t; //advanced usage.
+uniform bool texGen7_p; //advanced usage.
+uniform int texGenMode7_p; //advanced usage.
+uniform bool texGen7_q; //advanced usage.
+uniform int texGenMode7_q; //advanced usage.
+
+POST PROCCESSOR UNIFORMS:
+uniform sampler2D tex0; //the scene
+uniform sampler2D tex1; //the fragment's eye pos
+varying vec2 texCoords; //the coordinates
+uniform float dx; //the X size of a fragment relative to the scene size
+uniform float dy; //the Y size of a fragment relative to the scene size
+uniform int eye; //-1 for no anaglyph, 0 for left eye, 1 for right. you probably won't need this.

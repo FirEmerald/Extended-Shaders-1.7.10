@@ -1,55 +1,49 @@
 package extendedshaders.api;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 /** used to turn shaders on and off, by adding and removing them from a registry.<br>
  * keep in mind changes do not effect until the beginning of the next render tick, or when {@link Passthrough#forceShaderCompile()} is run. **/
 public class ShaderRegistry
 {
-	private static final ArrayList<ShaderData> vertexShaders = new ArrayList<ShaderData>();
-	private static final ArrayList<ShaderData> fragmentShaders = new ArrayList<ShaderData>();
+	private static final HashMap<Shader, Integer> SHADERS = new HashMap<Shader, Integer>();
 	public static boolean hasChanged = true;
 	/** returns TRUE while shaders are running **/
 	public static boolean shadersActive = false;
-	/** turns a vetex shader ON **/
-	public static void addVertexShader(ShaderData data)
+	/** returns true during the world rendering **/
+	public static boolean rendering = false;
+	/** turns a shader ON **/
+	public static void addShader(Shader data)
 	{
-		vertexShaders.add(data);
+		SHADERS.put(data, 0);
 		hasChanged = true;
 	}
-	/** turns a vetex shader OFF **/
-	public static void removeVertexShader(ShaderData data)
+	/** turns a shader OFF **/
+	public static void removeShader(Shader data)
 	{
-		vertexShaders.remove(data);
+		SHADERS.remove(data);
 		hasChanged = true;
 	}
-	/** gets the active vertex shaders, sorted by priority **/
-	public static ShaderData[] getVertexShaders()
+	/** gets the active shaders, sorted by priority **/
+	public static Shader[] getShaders()
 	{
-		ShaderData[] data = new ShaderData[vertexShaders.size()];
-		data = vertexShaders.toArray(data);
+		Shader[] data = new Shader[SHADERS.size()];
+		data = SHADERS.keySet().toArray(data);
 		Arrays.sort(data);
 		return data;
 	}
-	/** turns a fragment shader ON **/
-	public static void addFragmentShader(ShaderData data)
+	/** attempt to change a multistate shader's state. does nothing if an invalid state. will not update the currently running shader - you must use {@link Passthrough#updateShaderStates()} **/
+	public static void setShaderState(Shader data, int state)
 	{
-		fragmentShaders.add(data);
-		hasChanged = true;
+		if (state < 0 || state >= data.getNumStates()) API.logger.warn("Tried to set a shader with " + data.getNumStates() + " states to invalid state " + state);
+		else SHADERS.put(data, Integer.valueOf(state));
 	}
-	/** turns a fragment shader OFF **/
-	public static void removeFragmentShader(ShaderData data)
+	/** gets a multistate shader's state. **/
+	public static int getShaderState(Shader data)
 	{
-		fragmentShaders.remove(data);
-		hasChanged = true;
-	}
-	/** gets the active fragment shaders, sorted by priority **/
-	public static ShaderData[] getFragmentShaders()
-	{
-		ShaderData[] data = new ShaderData[fragmentShaders.size()];
-		data = fragmentShaders.toArray(data);
-		Arrays.sort(data);
-		return data;
+		Integer num = SHADERS.get(data);
+		if (num == null) return -1;
+		else return num.intValue();
 	}
 }

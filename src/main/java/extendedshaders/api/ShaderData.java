@@ -1,114 +1,78 @@
 package extendedshaders.api;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
 
-/** Use this class to create a shader.<br>
- *  it can be a vertex shader or a fragment shader.<br>
- *  it can have a priority - higher-priority shaders are called FIRST. **/
-public class ShaderData implements Comparable
+public class ShaderData
 {
-    private static Logger logger = LogManager.getLogger("ExtendedShaders|API");
-	/** the code for this shader **/
-	public String shaderText;
-	/** the uniforms/variables/constants for this shader **/
-	public String uniformText;
-	/** the location of the code for this shader **/
-	public final ResourceLocation shaderFile;
-	/** the location of the uniforms/variables/constants for this shader **/
-	public final ResourceLocation uniformFile;
-	/** the priority of this shader **/
-	public final int priority;
-	/** all the custom uniform locations in this shader **/
-	public final HashMap<String, Integer> uniforms = new HashMap<String, Integer>();
-	/**
-	 * Creates a shader.
-	 * @param shaderFile the location of the shader code.
-	 */
-	public ShaderData(ResourceLocation shaderFile)
-	{
-		this(null, shaderFile, 0);
-	}
-
-	/**
-	 * Creates a shader.
-	 * @param uniformFile the location of the uniforms/variables/constants.
-	 * @param shaderFile the location of the shader code.
-	 * @param uniforms the uniforms of the shader.
-	 */
-	public ShaderData(ResourceLocation uniformFile, ResourceLocation shaderFile, String... uniforms)
-	{
-		this(uniformFile, shaderFile, 0, uniforms);
-	}
-
-	/**
-	 * Creates a shader.
-	 * @param shaderFile the location of the shader code.
-	 * @param priority the priority of the shader.
-	 */
-	public ShaderData(ResourceLocation shaderFile, int priority)
-	{
-		this(null, shaderFile, priority);
-	}
-
-	/**
-	 * Creates a shader.
-	 * @param uniformFile the location of the uniforms/variables/constants.
-	 * @param shaderFile the location of the shader code.
-	 * @param priority the priority of the shader.
-	 * @param uniforms the uniforms of the shader.
-	 */
-	public ShaderData(ResourceLocation uniformFile, ResourceLocation shaderFile, int priority, String... uniforms)
-	{
-		this.shaderFile = shaderFile;
-		this.uniformFile = uniformFile;
-		this.onReload(Minecraft.getMinecraft().getResourceManager());
-		this.priority = priority;
-		for (String uniform : uniforms) this.uniforms.put(uniform, -1);
-		ReloadListener.addData(this);
-	}
+	/** the code for this vertex shader **/
+	public String shaderTextVertex;
+	/** the uniforms/variables/constants for this vertex shader **/
+	public String uniformTextVertex;
+	/** the code for this fragment shader **/
+	public String shaderTextFragment;
+	/** the uniforms/variables/constants for this fragment shader **/
+	public String uniformTextFragment;
+	/** the location of the code for this vertex shader **/
+	public final ResourceLocation shaderFileVertex;
+	/** the location of the uniforms/variables/constants for this vertex shader **/
+	public final ResourceLocation uniformFileVertex;
+	/** the location of the code for this fragment shader **/
+	public final ResourceLocation shaderFileFragment;
+	/** the location of the uniforms/variables/constants for this fragment shader **/
+	public final ResourceLocation uniformFileFragment;
 	
-	/** gets the custom uniform locations from this program **/
-	public void getUniforms(int program)
+	/**
+	 * Creates a shader.
+	 * @param uniformFile the location of the uniforms/variables/constants.
+	 * @param shaderFile the location of the shader code.
+	 * @param priority the priority of the shader.
+	 */
+	public ShaderData(ResourceLocation uniformFileVertex, ResourceLocation shaderFileVertex, ResourceLocation uniformFileFragment, ResourceLocation shaderFileFragment)
 	{
-		for (Map.Entry<String, Integer> entry : uniforms.entrySet()) entry.setValue(GLSLHelper.getUniformLocation(program, entry.getKey()));
+		this.uniformFileVertex = uniformFileVertex;
+		this.shaderFileVertex = shaderFileVertex;
+		this.uniformFileFragment = uniformFileFragment;
+		this.shaderFileFragment = shaderFileFragment;
+		this.onReload(Minecraft.getMinecraft().getResourceManager());
 	}
 	
 	/** loads the shader text **/
 	public void onReload(IResourceManager manager)
 	{
-		shaderText = "";
-		uniformText = "";
-		if (shaderFile != null) try
+		shaderTextVertex = uniformTextVertex = shaderTextFragment = uniformTextFragment = "";
+		if (uniformFileVertex != null) try
 		{
-			shaderText = GLSLHelper.readFileAsString(shaderFile, manager) + "\n";
+			uniformTextVertex = GLSLHelper.readFileAsString(uniformFileVertex, manager) + "\n";
 		}
 		catch (Exception e)
 		{
-			logger.error("Failed to load shader data " + shaderFile.toString(), e);
+			API.logger.error("Failed to load uniform/function data " + uniformTextVertex.toString(), e);
 		}
-		if (uniformFile != null) try
+		if (shaderFileVertex != null) try
 		{
-			uniformText = GLSLHelper.readFileAsString(uniformFile, manager) + "\n";
+			shaderTextVertex = GLSLHelper.readFileAsString(shaderFileVertex, manager) + "\n";
 		}
 		catch (Exception e)
 		{
-			logger.error("Failed to load uniform/function data " + uniformFile.toString(), e);
+			API.logger.error("Failed to load shader data " + shaderFileVertex.toString(), e);
 		}
-	}
-	
-	/** used for sorting purposes **/
-	@Override
-	public int compareTo(Object o)
-	{
-		if (o instanceof ShaderData) return ((ShaderData) o).priority - priority;
-		else return 0;
+		if (uniformFileFragment != null) try
+		{
+			uniformTextFragment = GLSLHelper.readFileAsString(uniformFileFragment, manager) + "\n";
+		}
+		catch (Exception e)
+		{
+			API.logger.error("Failed to load uniform/function data " + uniformFileFragment.toString(), e);
+		}
+		if (shaderFileFragment != null) try
+		{
+			shaderTextFragment = GLSLHelper.readFileAsString(shaderFileFragment, manager) + "\n";
+		}
+		catch (Exception e)
+		{
+			API.logger.error("Failed to load shader data " + shaderFileFragment.toString(), e);
+		}
 	}
 }

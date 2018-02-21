@@ -11,16 +11,16 @@ import net.minecraft.client.resources.IResourceManagerReloadListener;
 /** DO NOT TOUCH THESE METHODS. they are used to ensure shaders and post-processors reload when resources are reloaded, even if Extended Shaders is not installed **/
 public class ReloadListener implements IResourceManagerReloadListener
 {
-	private static ArrayList<WeakReference<ShaderData>> data = new ArrayList<WeakReference<ShaderData>>();
+	private static ArrayList<WeakReference<Shader>> data = new ArrayList<WeakReference<Shader>>();
 	private static ArrayList<WeakReference<PostProcessor>> post = new ArrayList<WeakReference<PostProcessor>>();
 	static
 	{
 		((IReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).registerReloadListener(new ReloadListener());
 	}
 	
-	protected static void addData(ShaderData shaderData)
+	protected static void addData(Shader shaderData)
 	{
-		data.add(new WeakReference<ShaderData>(shaderData));
+		data.add(new WeakReference<Shader>(shaderData));
 	}
 	
 	protected static void addPost(PostProcessor postProcessor)
@@ -35,7 +35,7 @@ public class ReloadListener implements IResourceManagerReloadListener
 		int size = data.size();
 		for (int i = 0; i < size; i++)
 		{
-			WeakReference<ShaderData> reference = data.get(i);
+			WeakReference<Shader> reference = data.get(i);
 			if (reference.get() == null)
 			{
 				data.remove(i);

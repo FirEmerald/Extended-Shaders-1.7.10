@@ -1,10 +1,5 @@
 package extendedshaders.api;
 
-import java.util.HashMap;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
@@ -12,7 +7,6 @@ import net.minecraft.util.ResourceLocation;
 /** Use this class to create a post-render effect, such as blur. **/
 public class PostProcessor implements Comparable
 {
-    private static Logger logger = LogManager.getLogger("ExtendedShaders|API");
 	/** the shader program of this post-processor **/
 	public int program = -1;
 	/** the location of the code for this post-processor **/
@@ -30,8 +24,6 @@ public class PostProcessor implements Comparable
 	/** location of the uniform for setting the current "eye".<br>
 	 * the uniform's value (not THIS value) will be -1 for no anaglyph, 0 red, and 1 for cyan. **/
 	public int eye = -1;
-	/** all the custom uniform locations in this post-processor **/
-	public final HashMap<String, Integer> uniforms = new HashMap<String, Integer>();
 
 	/**
 	 * Creates a post-processor.
@@ -48,9 +40,9 @@ public class PostProcessor implements Comparable
 	 * @param shaderFile the location of the post-processor code.
 	 * @param uniforms the uniforms of the post-processor.
 	 */
-	public PostProcessor(ResourceLocation uniformFile, ResourceLocation shaderFile, String... uniforms)
+	public PostProcessor(ResourceLocation uniformFile, ResourceLocation shaderFile)
 	{
-		this(uniformFile, shaderFile, 0, uniforms);
+		this(uniformFile, shaderFile, 0);
 	}
 
 	/**
@@ -70,12 +62,11 @@ public class PostProcessor implements Comparable
 	 * @param priority the priority of the post-processor.
 	 * @param uniforms the uniforms of the post-processor.
 	 */
-	public PostProcessor(ResourceLocation uniformFile, ResourceLocation shaderFile, int priority, String... uniforms)
+	public PostProcessor(ResourceLocation uniformFile, ResourceLocation shaderFile, int priority)
 	{
 		this.shaderFile = shaderFile;
 		this.uniformFile = uniformFile;
 		this.priority = priority;
-		for (String uniform : uniforms) this.uniforms.put(uniform, -1);
 		this.onReload(Minecraft.getMinecraft().getResourceManager());
 		ReloadListener.addPost(this);
 	}
@@ -91,7 +82,7 @@ public class PostProcessor implements Comparable
 		}
 		catch (Exception e)
 		{
-			logger.error("Failed to load shader data " + shaderFile.toString(), e);
+			API.logger.error("Failed to load shader data " + shaderFile.toString(), e);
 		}
 		if (uniformFile != null) try
 		{
@@ -99,11 +90,14 @@ public class PostProcessor implements Comparable
 		}
 		catch (Exception e)
 		{
-			logger.error("Failed to load uniform/function data " + uniformFile.toString(), e);
+			API.logger.error("Failed to load uniform/function data " + uniformFile.toString(), e);
 		}
 		if (shaderText.equals("") && uniformText.equals("")) program = 0;
 		else Passthrough.instance.loadPostProcessor(this);
 	}
+	
+	/** get the custom uniform locations from this program here. requires use of a superclass, of course.**/
+	public void getUniforms(int program) {}
 
 	/** used for sorting purposes **/
 	@Override

@@ -7,6 +7,6 @@ public class Passthrough
 	public static Passthrough instance = new Passthrough();
 	/** Loads a PostProcessor's shader - run automatically BY the PostProcessor **/
 	public void loadPostProcessor(PostProcessor postProcessor) {}
-	/** used to force the system to re-compile its shader. useful for changing the shader code mid-render **/
-	public void forceShaderCompile() {}
+	/** switch to the current shader states **/
+	public void updateShaderStates() {}
 }

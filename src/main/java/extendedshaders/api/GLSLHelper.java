@@ -6,12 +6,18 @@ import java.io.InputStreamReader;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.lwjgl.opengl.ARBFramebufferObject;
 import org.lwjgl.opengl.ARBShaderObjects;
 import org.lwjgl.opengl.ContextCapabilities;
+import org.lwjgl.opengl.EXTFramebufferBlit;
+import org.lwjgl.opengl.EXTFramebufferObject;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL21;
+import org.lwjgl.opengl.GL30;
+import org.lwjgl.opengl.GL31;
+import org.lwjgl.opengl.GL33;
+import org.lwjgl.opengl.GL42;
 import org.lwjgl.opengl.GLContext;
 import org.lwjgl.util.glu.GLU;
 
@@ -25,33 +31,62 @@ import net.minecraft.util.ResourceLocation;
  */
 public class GLSLHelper
 {
+	/** are shaders supported? **/
+	public static final boolean SHADER_SUPPORTED;
+	/** are framebuffers supported? **/
+	public static final boolean FB_SUPPORTED;
+	/** is framebuffer blitting supported? **/
+	public static final boolean FB_BLIT_SUPPORTED;
+	/** are floating-point textures supported? **/
+	public static final boolean TEX_FLOAT_SUPPORTED;
 	/** TRUE if using the compatibility profile **/
 	public static final boolean ARBSHADERS;
-    private static Logger logger = LogManager.getLogger("GLSL Helper");
+	/** 0 for GL30, 1 for ARB framebuffers, 2 for extension framebuffers, or -1 for unsupported **/
+	public static final int FBCOMPAT;
+	/** is Extended Shaders supported? **/
+	public static final boolean SUPPORTED;
 	static
 	{
 		ContextCapabilities caps = GLContext.getCapabilities();
-		ARBSHADERS = caps.OpenGL21;
+		SHADER_SUPPORTED = (ARBSHADERS = caps.OpenGL21) || (caps.GL_ARB_vertex_shader && caps.GL_ARB_fragment_shader && caps.GL_ARB_shader_objects);
+		FB_SUPPORTED = caps.OpenGL30 || caps.GL_ARB_framebuffer_object || caps.GL_EXT_framebuffer_object;
+		FB_BLIT_SUPPORTED = caps.OpenGL30 || caps.GL_ARB_framebuffer_object || caps.GL_EXT_framebuffer_blit;
+		TEX_FLOAT_SUPPORTED = caps.OpenGL30 || caps.GL_ARB_texture_float || caps.GL_ATI_texture_float;
+		FBCOMPAT = FB_SUPPORTED ? caps.OpenGL30 ? 0 : caps.GL_ARB_framebuffer_object ? 1 : 2 : -1;
+		SUPPORTED = SHADER_SUPPORTED && FB_SUPPORTED && FB_BLIT_SUPPORTED && TEX_FLOAT_SUPPORTED;
 	}
+	
 	/** creates a new shader program **/
 	public static int createProgram()
 	{
-		return OpenGlHelper.func_153183_d();
+        return ARBSHADERS ? ARBShaderObjects.glCreateProgramObjectARB() : GL20.glCreateProgram();
 	}
 	/** gets the location of a uniform in the shader program **/
 	public static int getUniformLocation(int program, CharSequence name)
 	{
-		return OpenGlHelper.func_153194_a(program, name);
+        return ARBSHADERS ? ARBShaderObjects.glGetUniformLocationARB(program, name) : GL20.glGetUniformLocation(program, name);
+	}
+	/** stores the value of the INTEGER uniform to the buffer. **/
+	public static void getUniform(int program, int uniform, IntBuffer value)
+	{
+		if (ARBSHADERS) ARBShaderObjects.glGetUniformARB(program, uniform, value);
+		else GL20.glGetUniform(program, uniform, value);
+	}
+	/** stores the value of the FLOAT uniform to the buffer. **/
+	public static void getUniform(int program, int uniform, FloatBuffer value)
+	{
+		if (ARBSHADERS) ARBShaderObjects.glGetUniformARB(program, uniform, value);
+		else GL20.glGetUniform(program, uniform, value);
 	}
 	/** creates a vertex shader **/
 	public static int createVertShader()
 	{
-		return OpenGlHelper.func_153195_b(GL20.GL_VERTEX_SHADER);
+        return ARBSHADERS ? ARBShaderObjects.glCreateShaderObjectARB(GL20.GL_VERTEX_SHADER) : GL20.glCreateShader(GL20.GL_VERTEX_SHADER);
 	}
 	/** creates a fragment shader **/
 	public static int createFragShader()
 	{
-		return OpenGlHelper.func_153195_b(GL20.GL_FRAGMENT_SHADER);
+        return ARBSHADERS ? ARBShaderObjects.glCreateShaderObjectARB(GL20.GL_FRAGMENT_SHADER) : GL20.glCreateShader(GL20.GL_FRAGMENT_SHADER);
 	}
 	/** load the string into the shader **/
 	public static void shaderSource(int shader, CharSequence string)
@@ -62,17 +97,19 @@ public class GLSLHelper
 	/** compiles the shader **/
 	public static void compileShader(int shader)
 	{
-		OpenGlHelper.func_153170_c(shader);
+        if (ARBSHADERS) ARBShaderObjects.glCompileShaderARB(shader);
+        else GL20.glCompileShader(shader);
 	}
 	/** returns TRUE if the shader DID compile successfully **/
 	public static boolean didShaderCompile(int shader)
 	{
-		return OpenGlHelper.func_153157_c(shader, GL20.GL_COMPILE_STATUS) == GL11.GL_TRUE;
+		return (ARBSHADERS ? ARBShaderObjects.glGetObjectParameteriARB(shader, GL20.GL_COMPILE_STATUS) : GL20.glGetShaderi(shader, GL20.GL_COMPILE_STATUS)) == GL11.GL_TRUE;
 	}
 	/** deletes a shader **/
 	public static void deleteShader(int shader)
 	{
-		OpenGlHelper.func_153180_a(shader);
+        if (ARBSHADERS) ARBShaderObjects.glDeleteObjectARB(shader);
+        else GL20.glDeleteShader(shader);
 	}
 	/** gets the log for the shader **/
     public static String getShaderLog(int shader)
@@ -82,17 +119,19 @@ public class GLSLHelper
 	/** attaches the shader to the program **/
     public static void linkShader(int program, int shader)
     {
-    	OpenGlHelper.func_153178_b(program, shader);
+        if (ARBSHADERS) ARBShaderObjects.glAttachObjectARB(program, shader);
+        else GL20.glAttachShader(program, shader);
     }
     /** finalizes the program after linking shaders **/
     public static void linkProgram(int program)
     {
-    	OpenGlHelper.func_153179_f(program);
+        if (ARBSHADERS) ARBShaderObjects.glLinkProgramARB(program);
+        else GL20.glLinkProgram(program);
     }
     /** returns TRUE if the shaders linked to the program successfully **/
 	public static boolean didProgramLink(int program)
 	{
-		return OpenGlHelper.func_153175_a(program, GL20.GL_LINK_STATUS) == GL11.GL_TRUE;
+        return (ARBSHADERS ? ARBShaderObjects.glGetObjectParameteriARB(program, GL20.GL_LINK_STATUS) : GL20.glGetProgrami(program, GL20.GL_LINK_STATUS)) == GL11.GL_TRUE;
 	}
 	/** runs a validation check on the program to ensure nothing goes wrong **/
 	public static void validateProgram(int program)
@@ -113,17 +152,20 @@ public class GLSLHelper
     /** sets the active shader program **/
 	public static void runProgram(int program)
 	{
-		OpenGlHelper.func_153161_d(program);
+        if (ARBSHADERS) ARBShaderObjects.glUseProgramObjectARB(program);
+        else GL20.glUseProgram(program);
 	}
 	/** deletes a program **/
 	public static void deleteProgram(int program)
 	{
-		OpenGlHelper.func_153187_e(program);
+        if (ARBSHADERS) ARBShaderObjects.glDeleteObjectARB(program);
+        else GL20.glDeleteProgram(program);
 	}
-	/** sets a uniform integer type (bool, int, sampler2D, ect.) **/
+	/** sets a uniform integer type **/
 	public static void uniform1i(int location, int val)
 	{
-		OpenGlHelper.func_153163_f(location, val);
+    	if (ARBSHADERS) ARBShaderObjects.glUniform1iARB(location, val);
+    	else GL20.glUniform1i(location, val);
 	}
 	/** sets a uniform float type **/
 	public static void uniform1f(int location, float val)
@@ -137,7 +179,7 @@ public class GLSLHelper
     	if (ARBSHADERS) ARBShaderObjects.glUniform2iARB(location, val1, val2);
     	else GL20.glUniform2i(location, val1, val2);
 	}
-	/** sets a uniform 2-float (vec2) type **/
+	/** sets a uniform 2-float type **/
 	public static void uniform2f(int location, float val1, float val2)
 	{
     	if (ARBSHADERS) ARBShaderObjects.glUniform2fARB(location, val1, val2);
@@ -149,7 +191,7 @@ public class GLSLHelper
     	if (ARBSHADERS) ARBShaderObjects.glUniform3iARB(location, val1, val2, val3);
     	else GL20.glUniform3i(location, val1, val2, val3);
 	}
-	/** sets a uniform 3-float (vec3) type **/
+	/** sets a uniform 3-float type **/
 	public static void uniform3f(int location, float val1, float val2, float val3)
 	{
 		if (ARBSHADERS) ARBShaderObjects.glUniform3fARB(location, val1, val2, val3);
@@ -161,66 +203,127 @@ public class GLSLHelper
     	if (ARBSHADERS) ARBShaderObjects.glUniform4iARB(location, val1, val2, val3, val4);
     	else GL20.glUniform4i(location, val1, val2, val3, val4);
 	}
-	/** sets a uniform 4-float (vec4) type **/
+	/** sets a uniform 4-float type **/
 	public static void uniform4f(int location, float val1, float val2, float val3, float val4)
 	{
 		if (ARBSHADERS) ARBShaderObjects.glUniform4fARB(location, val1, val2, val3, val4);
 		else GL20.glUniform4f(location, val1, val2, val3, val4);
 	}
-	/** sets a uniform integer (bool, int, sampler2D, ect.) type array **/
+	/** sets a uniform integer type array **/
 	public static void uniform1(int location, IntBuffer val)
 	{
-		OpenGlHelper.func_153181_a(location, val);
+        if (ARBSHADERS) ARBShaderObjects.glUniform1ARB(location, val);
+        else GL20.glUniform1(location, val);
 	}
 	/** sets a uniform float type array **/
 	public static void uniform1(int location, FloatBuffer val)
 	{
-		OpenGlHelper.func_153168_a(location, val);
+        if (ARBSHADERS) ARBShaderObjects.glUniform1ARB(location, val);
+        else GL20.glUniform1(location, val);
 	}
 	/** sets a uniform 2-integer type array **/
 	public static void uniform2(int location, IntBuffer val)
 	{
-		OpenGlHelper.func_153182_b(location, val);
+        if (ARBSHADERS) ARBShaderObjects.glUniform2ARB(location, val);
+        else GL20.glUniform2(location, val);
 	}
-	/** sets a uniform 2-float (vec2) type array **/
+	/** sets a uniform 2-float type array **/
 	public static void uniform2(int location, FloatBuffer val)
 	{
-		OpenGlHelper.func_153177_b(location, val);
+        if (ARBSHADERS) ARBShaderObjects.glUniform2ARB(location, val);
+        else GL20.glUniform2(location, val);
 	}
 	/** sets a uniform 3-integer type array **/
 	public static void uniform3(int location, IntBuffer val)
 	{
-		OpenGlHelper.func_153192_c(location, val);
+        if (ARBSHADERS) ARBShaderObjects.glUniform3ARB(location, val);
+        else GL20.glUniform3(location, val);
 	}
-	/** sets a uniform 3-float (vec3) type array **/
+	/** sets a uniform 3-float type array **/
 	public static void uniform3(int location, FloatBuffer val)
 	{
-		OpenGlHelper.func_153191_c(location, val);
+        if (ARBSHADERS) ARBShaderObjects.glUniform3ARB(location, val);
+        else GL20.glUniform3(location, val);
 	}
 	/** sets a uniform 4-integer type array **/
 	public static void uniform4(int location, IntBuffer val)
 	{
-		OpenGlHelper.func_153162_d(location, val);
+        if (ARBSHADERS) ARBShaderObjects.glUniform4ARB(location, val);
+        else GL20.glUniform4(location, val);
 	}
-	/** sets a uniform 4-float (vec4) type array **/
+	/** sets a uniform 4-float type array **/
 	public static void uniform4(int location, FloatBuffer val)
 	{
-		OpenGlHelper.func_153159_d(location, val);
+        if (ARBSHADERS) ARBShaderObjects.glUniform4ARB(location, val);
+        else GL20.glUniform4(location, val);
 	}
 	/** sets a uniform mat2 **/
     public static void uniformMat2(int location, boolean transpose, FloatBuffer val)
     {
-    	OpenGlHelper.func_153173_a(location, transpose, val);
+        if (ARBSHADERS) ARBShaderObjects.glUniformMatrix2ARB(location, transpose, val);
+        else GL20.glUniformMatrix2(location, transpose, val);
     }
 	/** sets a uniform mat3 **/
     public static void uniformMat3(int location, boolean transpose, FloatBuffer val)
     {
-    	OpenGlHelper.func_153189_b(location, transpose, val);
+        if (ARBSHADERS) ARBShaderObjects.glUniformMatrix3ARB(location, transpose, val);
+        else GL20.glUniformMatrix3(location, transpose, val);
     }
 	/** sets a uniform mat4 **/
     public static void uniformMat4(int location, boolean transpose, FloatBuffer val)
     {
-    	OpenGlHelper.func_153160_c(location, transpose, val);
+        if (ARBSHADERS) ARBShaderObjects.glUniformMatrix4ARB(location, transpose, val);
+        else GL20.glUniformMatrix4(location, transpose, val);
+    }
+    /** binds a framebuffer **/
+    public static void bindFramebuffer(int mode, int fb)
+    {
+        switch (FBCOMPAT)
+        {
+        case 0:
+            GL30.glBindFramebuffer(mode, fb);
+            break;
+        case 1:
+            ARBFramebufferObject.glBindFramebuffer(mode, fb);
+            break;
+        case 2:
+            EXTFramebufferObject.glBindFramebufferEXT(mode, fb);
+        }
+    }
+    /** blits the read framebuffer to the draw framebuffer **/
+    public static void blitFramebuffer(int srcX0, int srcY0, int srcX1, int srcY1, int dstX0, int dstY0, int dstX1, int dstY1, int mask, int filter)
+    {
+        switch (FBCOMPAT)
+        {
+            case 0:
+            	GL30.glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
+                break;
+            case 1:
+            	ARBFramebufferObject.glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
+                break;
+            case 2:
+                EXTFramebufferBlit.glBlitFramebufferEXT(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
+        }
+    }
+    /**attaches a texture to a framebuffer target **/
+    public static void framebufferTexture2D(int target, int attachment, int texTarget, int texture, int level)
+    {
+        switch (FBCOMPAT)
+        {
+            case 0:
+                GL30.glFramebufferTexture2D(target, attachment, texTarget, texture, level);
+                break;
+            case 1:
+                ARBFramebufferObject.glFramebufferTexture2D(target, attachment, texTarget, texture, level);
+                break;
+            case 2:
+                EXTFramebufferObject.glFramebufferTexture2DEXT(target, attachment, texTarget, texture, level);
+        }
+    }
+    /** are framebuffers enabled? **/
+    public static boolean framebuffersEnabled()
+    {
+    	return FB_SUPPORTED && OpenGlHelper.isFramebufferEnabled();
     }
     /** reads a text file as a single string of text **/
     public static String readFileAsString(ResourceLocation loc, IResourceManager manager) throws Exception
@@ -282,10 +385,10 @@ public class GLSLHelper
         if (i != 0)
         {
             String s1 = GLU.gluErrorString(i);
-            logger.error("########## GL ERROR ##########");
-            logger.error("@ " + location);
-            logger.error(i + ": " + s1);
-            while ((i = GL11.glGetError()) != 0) logger.error(i + ": " + s1);
+            API.logger.error("########## GL ERROR ##########");
+            API.logger.error("@ " + location);
+            API.logger.error(i + ": " + s1);
+            while ((i = GL11.glGetError()) != 0) API.logger.error(i + ": " + s1);
         }
     }
 }
